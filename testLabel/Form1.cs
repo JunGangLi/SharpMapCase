@@ -266,16 +266,56 @@ namespace testLabel
                             tempfdr["FlightId"] = srcFdr["FlightId"];
                             tempfdr["Name"] = srcFdr["Name"];
                             tempfdr["OverlapCount"] = srcFdr["OverlapCount"];
+                            if (Convert.ToInt32( srcFdr["OverlapCount"])>0)
+                            {
+                                Debug.WriteLine(Convert.ToInt32(srcFdr["OverlapCount"]));
+                            }
                             tempfdr.Geometry = srcFdr.Geometry;
                             allfdt.Rows.Add(tempfdr);
                         }
                     }
 
+                    VectorStyle overlap0 = new VectorStyle();
+                    overlap0.Fill = new SolidBrush(Color.FromArgb(90,10,100,30));
+                    overlap0.Outline = new Pen(Color.Yellow, 1.0f);
+                    overlap0.EnableOutline = true;
 
+                    VectorStyle overlap2 = new VectorStyle();
+                    overlap2.Fill = new SolidBrush(Color.FromArgb(90, 10, 130, 30));
+                    overlap0.Outline = new Pen(Color.Yellow, 1.0f);
+                    overlap0.EnableOutline = true;
+
+                    VectorStyle overlap3 = new VectorStyle();
+                    overlap3.Fill = new SolidBrush(Color.FromArgb(90, 10, 160, 30));
+                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
+                    overlap0.EnableOutline = true;
+
+                    VectorStyle overlap4 = new VectorStyle();
+                    overlap4.Fill = new SolidBrush(Color.FromArgb(90, 10, 190, 30));
+                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
+                    overlap0.EnableOutline = true;
+
+                    VectorStyle overlap5 = new VectorStyle();
+                    overlap5.Fill = new SolidBrush(Color.FromArgb(90, 10, 220, 30));
+                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
+                    overlap0.EnableOutline = true;
+
+                    VectorStyle defualtStyle = new VectorStyle();
+                    defualtStyle.Fill = new SolidBrush(Color.FromArgb(200, Color.Red));
+                    //overlap0.Outline = new Pen(Color.Yellow, 1.0f);
+                    overlap0.EnableOutline = true;
+
+                    Dictionary<int, IStyle> styles = new Dictionary<int, IStyle>();
+                    styles.Add(0, overlap0);
+                    styles.Add(1, overlap2);
+                    styles.Add(2, overlap3);
+                    styles.Add(3, overlap4);
+                    styles.Add(4, overlap5);
 
 
                     VectorLayer vlayer = new VectorLayer("l");
                     vlayer.DataSource = new SharpMap.Data.Providers.GeometryFeatureProvider(allfdt);
+                    vlayer.Theme = new UniqueValuesTheme<int>("OverlapCount", styles, defualtStyle);
                     vlayer.Style.Fill=new SolidBrush(Color.FromArgb(30,Color.Green));
                     vlayer.Enabled=true;
                     mbox.Map.Layers.Add(vlayer);
@@ -349,11 +389,12 @@ namespace testLabel
                     else
                         break;
                 }
-                //foreach (var item in removeFeature)
-                //{
-                //    flight.RemoveRow(item);
-                //}
-            }
+                foreach (var item in removeFeature)
+                {
+                    flight.RemoveRow(item);
+                }
+                removeFeature.Clear();
+            }           
         }
 
 
