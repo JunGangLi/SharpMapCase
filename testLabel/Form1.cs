@@ -217,7 +217,7 @@ namespace testLabel
                                 }
                                 XmlNode coordinatesN_even = placemarks_even[k].SelectSingleNode("pre:Polygon/pre:outerBoundaryIs/pre:LinearRing/pre:coordinates", xnm);
                                 string placemarkName_even = placemarks_even[k].SelectSingleNode("pre:name", xnm).InnerText;
-                                string coordStr = coordinatesN_odd.InnerText.Trim();
+                                string coordStr = coordinatesN_even.InnerText.Trim();
                                 string[] coordinateA_even = coordStr.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                                 Coordinate[] coor = new Coordinate[coordinateA_even.Length];
                                 for (int j = 0; j < coordinateA_even.Length; j++)
@@ -242,9 +242,14 @@ namespace testLabel
                 }
 
                 //对fdtDic中的所有航线进行旁向重叠计算
+                int index = 0;
                 foreach (var item in fdtDic.Values)
                 {
                     overlapLR(item);
+                    if (++index >= 1)
+                    {
+                        break;
+                    }
                 }
                 
                 FeatureDataTable allfdt = null;//所有的航线都放进来了
@@ -258,7 +263,7 @@ namespace testLabel
                             allfdt.Columns.Add("FlightId", typeof(int));
                             allfdt.Columns.Add("Name", typeof(string));
                             allfdt.Columns.Add("OverlapCount", typeof(int));
-                        }
+                        }                       
                         foreach (var r in item.Rows)
                         {
                             FeatureDataRow srcFdr = r as FeatureDataRow;
@@ -272,36 +277,46 @@ namespace testLabel
                             }
                             tempfdr.Geometry = srcFdr.Geometry;
                             allfdt.Rows.Add(tempfdr);
+                            Debug.WriteLine(srcFdr["FlightId"]);
+                            Debug.WriteLine(srcFdr["Name"]);
+                            Debug.WriteLine(srcFdr["OverlapCount"]);
+                            Debug.WriteLine(tempfdr.Geometry.Area);
+                            Debug.WriteLine(tempfdr.Geometry);
+                            //if (++geolength>20)
+                            //{
+                            //    break;
+                            //}
                         }
+                        
                     }
 
                     VectorStyle overlap0 = new VectorStyle();
-                    overlap0.Fill = new SolidBrush(Color.FromArgb(90,10,100,30));
-                    overlap0.Outline = new Pen(Color.Yellow, 1.0f);
+                    overlap0.Fill = new SolidBrush(Color.FromArgb(25, Color.Green));
+                    overlap0.Outline = new Pen(Color.Red, 1.0f);
                     overlap0.EnableOutline = true;
 
                     VectorStyle overlap2 = new VectorStyle();
-                    overlap2.Fill = new SolidBrush(Color.FromArgb(90, 10, 130, 30));
-                    overlap0.Outline = new Pen(Color.Yellow, 1.0f);
-                    overlap0.EnableOutline = true;
+                    overlap2.Fill = new SolidBrush(Color.FromArgb(20, Color.Yellow));
+                    overlap2.Outline = new Pen(Color.Yellow, 1.0f);
+                    overlap2.EnableOutline = true;
 
                     VectorStyle overlap3 = new VectorStyle();
-                    overlap3.Fill = new SolidBrush(Color.FromArgb(90, 10, 160, 30));
-                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
-                    overlap0.EnableOutline = true;
+                    overlap3.Fill = new SolidBrush(Color.FromArgb(20, Color.Pink));
+                    overlap3.Outline = new Pen(Color.Yellow, 2.0f);
+                    overlap3.EnableOutline = true;
 
                     VectorStyle overlap4 = new VectorStyle();
-                    overlap4.Fill = new SolidBrush(Color.FromArgb(90, 10, 190, 30));
-                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
-                    overlap0.EnableOutline = true;
+                    overlap4.Fill = new SolidBrush(Color.FromArgb(20, Color.Blue));
+                    overlap4.Outline = new Pen(Color.Pink, 2.0f);
+                    overlap4.EnableOutline = true;
 
                     VectorStyle overlap5 = new VectorStyle();
-                    overlap5.Fill = new SolidBrush(Color.FromArgb(90, 10, 220, 30));
-                    overlap0.Outline = new Pen(Color.Yellow, 2.0f);
-                    overlap0.EnableOutline = true;
+                    overlap5.Fill = new SolidBrush(Color.FromArgb(20, Color.Black));
+                    overlap5.Outline = new Pen(Color.PowderBlue, 2.0f);
+                    overlap5.EnableOutline = true;
 
                     VectorStyle defualtStyle = new VectorStyle();
-                    defualtStyle.Fill = new SolidBrush(Color.FromArgb(200, Color.Red));
+                    defualtStyle.Fill = new SolidBrush(Color.FromArgb(25, Color.Green));
                     //overlap0.Outline = new Pen(Color.Yellow, 1.0f);
                     overlap0.EnableOutline = true;
 
@@ -320,23 +335,13 @@ namespace testLabel
                     vlayer.Enabled=true;
                     mbox.Map.Layers.Add(vlayer);
                     mbox.Map.ZoomToExtents();
+                    mbox.ActiveTool = MapBox.Tools.Pan;
                     mbox.Refresh();
 	            }               
             }
         }
 
-               
-                //if (srcfdtAll.Rows.Count > 0)
-                //{
-                //    VectorLayer vlayer = new VectorLayer("kml");
-                //    vlayer.DataSource = new SharpMap.Data.Providers.GeometryFeatureProvider(srcfdtAll);
-                //    vlayer.Style.Fill = new SolidBrush(Color.FromArgb(30, Color.Green));
-                //    vlayer.Enabled = true;
-                //    mbox.Map.Layers.Add(vlayer);
-                //    mbox.Map.ZoomToExtents();
-                //    mbox.Refresh();
-                //}
-
+       
                    
 
        /// <summary>
@@ -349,55 +354,171 @@ namespace testLabel
             {
                 return;
             }
-            List<FeatureDataRow> removeFeature = new List<FeatureDataRow>();
+            //List<FeatureDataRow> removeFeature = new List<FeatureDataRow>();
             for (int i = 0; i < flight.Rows.Count-1; i++)
             {
+                if (i == 8)
+                {
+                    break;
+                }
                 FeatureDataRow targetFeature = flight.Rows[i] as FeatureDataRow;
-                IGeometry p = targetFeature.Geometry;
+                Debug.Write("targetFeature");
+                Debug.WriteLine(targetFeature["Name"]);              
+                if (targetFeature.Geometry.Area == 0)
+                {
+                    flight.Rows.Remove(targetFeature);
+                    i--;
+                    continue;
+                }
                 for (int j = i + 1; ( j < flight.Rows.Count); j++)
                 {
-                    FeatureDataRow tempFeature = flight.Rows[i] as FeatureDataRow;
-                    if (p.Intersects(tempFeature.Geometry))
+                    if (targetFeature.Geometry.Area == 0)
                     {
-                        IGeometry intersection = p.Intersection(tempFeature.Geometry);
-                        IGeometry diff = p.Difference(tempFeature.Geometry);
-                        if (intersection.Area > 0)
+                       flight.Rows.Remove(targetFeature);
+                        i--;
+                        break ;
+                    }
+                    Debug.WriteLine("{0}:name   {1}     area    {2}", "targetFeature", targetFeature["Name"], targetFeature.Geometry.Area);    
+                    FeatureDataRow tempFeature = flight.Rows[j] as FeatureDataRow;
+                    if (tempFeature.Geometry.Area==0)
+                    {                         
+                        j--;
+                        flight.Rows.Remove(tempFeature);
+                        continue ;
+                    }
+
+                    Debug.WriteLine("{0}:name   {1}     area    {2}","tempFeature",tempFeature["Name"],tempFeature.Geometry.Area);                  
+                   
+                    if (targetFeature.Geometry.Intersects(tempFeature.Geometry))
+                    {
+                        IGeometry intersection = targetFeature.Geometry.Intersection(tempFeature.Geometry);//相交部分构成新的要素
+                        if (intersection.Area==0) continue;                      
+                        IGeometry targetDiff = targetFeature.Geometry.Difference(tempFeature.Geometry);//几何的集合差更新当前目标要素的几何对象
+                        IGeometry tempDiff = tempFeature.Geometry.Difference(targetFeature.Geometry);//几何的集合差更新对比要素的几何对象
+                                       
+
+                        #region 邻接要素去除重合部分后更新（新生成的几何可能是要素集合，如果是集合则要生成新的要素）
+                        //IGeometry tempDiff = tempFeature.Geometry.Difference(targetFeature.Geometry);                       
                         {
-                            FeatureDataRow fdr = flight.NewRow();
-                            fdr["FlightId"] = targetFeature["FlightId"];
-                            fdr["Name"] = targetFeature["Name"];
-                            int overlap = 0;
-                            if (int.TryParse(targetFeature["OverlapCount"].ToString(), out overlap))
+                            List<IGeometry> geometries = GeoCollection2GeoList(tempDiff);                           
+                            for (int ll = 0; ll < geometries.Count; ll++)
                             {
-                                fdr["OverlapCount"] = overlap + 1;
+                                //if (ll == 0)
+                                //{
+                                //    tempFeature.Geometry = geometries[ll];
+                                //    continue;
+                                //}
+                                if (geometries[ll].Area > 0)
+                                {
+                                    FeatureDataRow fdr = flight.NewRow();
+                                    fdr["FlightId"] = tempFeature["FlightId"];
+                                    fdr["Name"] = tempFeature["Name"].ToString() + string.Format("({0})", ll);
+                                    fdr["OverlapCount"] = tempFeature["OverlapCount"];
+                                    fdr.Geometry = geometries[ll];
+                                    flight.Rows.InsertAt(fdr, (j + 1));
+                                }
+                            }                          
+                        }
+                        #endregion
+
+                        #region 重合部分作为新要素生成出来 
+                        {
+                            List<IGeometry> geometries = GeoCollection2GeoList(intersection);
+                            for (int ll = 0; ll < geometries.Count; ll++)
+                            {
+                                if (geometries[ll].Area > 0)
+                                {
+                                    FeatureDataRow fdr = flight.NewRow();
+                                    fdr["FlightId"] = targetFeature["FlightId"];
+                                    fdr["Name"] = targetFeature["Name"].ToString() + "::" + tempFeature["Name"].ToString() + string.Format("({0})", ll);
+                                    int targetOverlap = 0;
+                                    int tempOverlap = 0;
+                                    int overlap = 1;
+                                    if (int.TryParse(targetFeature["OverlapCount"].ToString(), out targetOverlap))
+                                    {
+                                        overlap += targetOverlap;
+                                    }
+                                    if (int.TryParse(tempFeature["OverlapCount"].ToString(), out tempOverlap))
+                                    {
+                                        overlap += tempOverlap;
+                                    }
+                                    fdr["OverlapCount"] = overlap;
+                                    fdr.Geometry = geometries[ll];
+                                    flight.Rows.InsertAt(fdr, (i + 1));
+                                }
                             }
-                            else
-                                fdr["OverlapCount"] = 1;
-                            fdr.Geometry = intersection;
-                            flight.AddRow(fdr);
+                            j++;
                         }
-                        if (diff.Area > 0)
+                      
+                    
+                        #endregion
+
+                        #region 目标要素去除重合部分后更新几何（新生成的几何可能是要素集合，如果是集合则要生成新的要素）
+                        //IGeometry targetDiff = targetFeature.Geometry.Difference(tempFeature.Geometry);
                         {
-                            targetFeature.Geometry = diff;
+                            List<IGeometry> geometries = GeoCollection2GeoList(targetDiff);
+                            for (int ll = 0; ll < geometries.Count; ll++)
+                            {                                
+                                //if (ll == 0)
+                                //{
+                                //    targetFeature.Geometry = geometries[ll];
+                                //    continue;
+                                //}
+                                if (geometries[ll].Area > 0)
+                                {
+                                    FeatureDataRow fdr = flight.NewRow();
+                                    fdr["FlightId"] = targetFeature["FlightId"];
+                                    fdr["Name"] = targetFeature["Name"].ToString() + string.Format("({0})", ll);
+                                    fdr["OverlapCount"]=targetFeature["OverlapCount"];                                  
+                                    fdr.Geometry = geometries[ll];
+                                    flight.Rows.InsertAt(fdr, (i +1));
+                                }
+                            }
+                            
                         }
-                        else
-                        {
-                            targetFeature.Geometry = diff;
-                            removeFeature.Add(targetFeature);
-                        }
+                        #endregion
+
+                        flight.Rows.Remove(targetFeature);
+                        flight.Rows.Remove(tempFeature);
+                        targetFeature = flight.Rows[i] as FeatureDataRow;                      
+                        j--;
+                        i--;
                     }
                     else
                         break;
                 }
-                foreach (var item in removeFeature)
-                {
-                    flight.RemoveRow(item);
-                }
-                removeFeature.Clear();
-            }           
+            }
+
+            //foreach (var item in removeFeature)
+            //{
+            //    flight.RemoveRow(item);
+            //}
+            //removeFeature.Clear();
         }
 
-
+        private List<IGeometry> GeoCollection2GeoList(IGeometry geom)
+        {
+            List<IGeometry> result = new List<IGeometry>();
+            IGeometryCollection collect = geom as IGeometryCollection;
+            if (collect != null)
+            {
+                for (int i = 0; i < collect.Length; i++)
+                {
+                    IGeometryCollection tempCollect = collect[i] as IGeometryCollection;
+                    if (tempCollect == null)
+                    {
+                        result.Add(collect[i]);
+                    }
+                    else
+                    {
+                        result.AddRange(GeoCollection2GeoList(collect[i]));
+                    }
+                }
+            }
+            else
+                result.Add(geom);
+            return result;
+        }
 
         private void 测试9交模型ToolStripMenuItem_Click(object sender, EventArgs e)
         {
